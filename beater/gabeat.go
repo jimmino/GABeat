@@ -7,7 +7,8 @@ import (
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
 	"github.com/elastic/beats/libbeat/logp"
-	"github.com/elastic/beats/libbeat/publisher"
+
+	//"github.com/elastic/beats/libbeat/publisher"
 
 	"github.com/GeneralElectric/GABeat/config"
 	"github.com/GeneralElectric/GABeat/ga"
@@ -20,7 +21,7 @@ type gaDataRetriever func(gaConfig config.GoogleAnalyticsConfig) (gaDataPoints [
 type Gabeat struct {
 	done   chan struct{}
 	config config.Config
-	client publisher.Client
+	client beat.Client
 }
 
 // Creates beater
@@ -44,7 +45,8 @@ func (bt *Gabeat) Run(b *beat.Beat) error {
 
 func runFunctionally(bt *Gabeat, b *beat.Beat, dataFunc gaDataRetriever) error {
 	logp.Info("gabeat is running! Hit CTRL-C to stop it.")
-	bt.client = b.Publisher.Connect()
+	var err error
+	bt.client, err = b.Publisher.Connect()
 	ticker := time.NewTicker(bt.config.Period)
 	for {
 		select {
@@ -52,11 +54,11 @@ func runFunctionally(bt *Gabeat, b *beat.Beat, dataFunc gaDataRetriever) error {
 			return nil
 		case <-ticker.C:
 		} //end select
-		beatOnce(bt.client, b.Name, bt.config.Googleanalytics, dataFunc)
+		beatOnce(bt.client, b.Info.Name, bt.config.Googleanalytics, dataFunc)
 	} //end for
 } //end func
 
-func beatOnce(client publisher.Client, beatName string, gaConfig config.GoogleAnalyticsConfig, dataFunc gaDataRetriever) {
+func beatOnce(client beat.Client, beatName string, gaConfig config.GoogleAnalyticsConfig, dataFunc gaDataRetriever) {
 	GAData, err := dataFunc(gaConfig)
 	if err == nil {
 		publishToElastic(client, beatName, GAData)
@@ -66,22 +68,30 @@ func beatOnce(client publisher.Client, beatName string, gaConfig config.GoogleAn
 
 }
 
-func makeEvent(beatType string, GAData []ga.GABeatDataPoint) map[string]interface{} {
-	event := common.MapStr{
-		"@timestamp": common.Time(time.Now()),
-		"type":       beatType,
-		"count":      1,  //The number of transactions that this event represents
+//func makeEvent(beatType string, GAData []ga.GABeatDataPoint) map[string]interface{} {
+func makeEvent(beatType string, GAData []ga.GABeatDataPoint) beat.Event {
+
+	event := beat.Event{
+		Timestamp: time.Now(), /* Timestamp */
+		Fields: common.MapStr{
+			"type":  beatType,
+			"count": 1,
+		},
 	}
+
 	for _, gaDataPoint := range GAData {
 		gaDataName := gaDataPoint.DimensionName + "_" + gaDataPoint.MetricName
-		event.Put(gaDataName, gaDataPoint.Value)
+		//event.Put(gaDataName, gaDataPoint.Value)
+		event.PutValue(gaDataName, gaDataPoint.Value)
 	}
 	return event
 }
 
-func publishToElastic(client publisher.Client, beatType string, GAData []ga.GABeatDataPoint) {
+func publishToElastic(client beat.Client, beatType string, GAData []ga.GABeatDataPoint) {
 	event := makeEvent(beatType, GAData)
-	succeeded := client.PublishEvent(event)
+	succeeded := client.Publish(event)
+	logp.Info("Event sent")
+	//succeeded := client.PublishEvent(event)
 	if !succeeded {
 		logp.Err("Publisher couldn't publish event to Elastic")
 	}
