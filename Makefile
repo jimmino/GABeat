@@ -1,9 +1,15 @@
 BEATNAME=gabeat
+BEAT_PATH=github.com/GeneralElectric/GABeat
 BEAT_DIR=GABeat
 SYSTEM_TESTS=false
 TEST_ENVIRONMENT=false
+#ES_BEATS_IMPORT_PATH=github.com/elastic/beats/v7
 ES_BEATS?=./vendor/github.com/elastic/beats
+ES_BEATS?=./vendor/${ES_BEATS_IMPORT_PATH}
 GOPACKAGES=$(shell glide novendor)
+#GOPACKAGES=$(shell go list ${BEAT_PATH}/... | grep -v /tools)
+GOBUILD_FLAGS=-i -ldflags "-X ${ES_BEATS_IMPORT_PATH}/libbeat/version.buildTime=$(NOW) -X ${ES_BEATS_IMPORT_PATH}/libbeat/version.commit=$(COMMIT_ID)"
+#GOBUILD_FLAGS=-i -ldflags "-X ${ES_BEATS_IMPORT_PATH}/libbeat/version.buildTime=$(NOW) -X ${ES_BEATS_IMPORT_PATH}/libbeat/version.commit=$(COMMIT_ID)"
 PREFIX?=.
 
 # Path to the libbeat Makefile
@@ -18,8 +24,9 @@ setup: copy-vendor
 .PHONY: copy-vendor
 copy-vendor:
 	mkdir -p vendor/github.com/elastic/
-	cp -R ${GOPATH}/src/github.com/elastic/beats vendor/github.com/elastic/
+	#cp -R ${GOPATH}/src/github.com/elastic/beats vendor/github.com/elastic/
 	rm -rf vendor/github.com/elastic/beats/.git
+	mage vendorUpdate
 
 .PHONY: git-init
 git-init:

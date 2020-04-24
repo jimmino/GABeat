@@ -7,9 +7,9 @@ gabeat.googleanalytics:
     # https://developers.google.com/analytics/devguides/reporting/realtime/v3/
     # Documentation explaining OAuth2 Service Account flow and how code works
     # https://developers.google.com/accounts/docs/OAuth2ServiceAccount
-    google_credentials_file: /path/to/your/jwt/token/file
+    google_credentials_file: $GOPATH/src/github.com/GeneralElectric/GABeat/key.json
     # replace ga_ids with your metric ID from GA
-    ga_ids: "ga:123456789"
+    ga_ids: "ga:149209755"
     # Docs on available metrics and dimensions can be found here:
     # https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/
     ga_metrics: "rt:pageviews"
@@ -60,11 +60,27 @@ output.elasticsearch:
   # Client Certificate Key
   #ssl.key: "/etc/pki/client/cert.key"
 
+#----------------------------- Kibana output --------------------------------
+# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
+# This requires a Kibana endpoint configuration.
+setup.kibana:
+
+  # Kibana Host
+  # Scheme and port can be left out and will be set to the default (http and 5601)
+  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
+  host: "localhost:5601"
+
+  # Kibana Space ID
+  # ID of the Kibana Space into which the dashboards should be loaded. By default,
+  # the Default Space will be used.
+  #space.id:
+
 #================================ Logging =====================================
 
 # Sets log level. The default log level is info.
 # Available log levels are: critical, error, warning, info, debug
-#logging.level: debug
+logging.level: debug
 
 # At debug level, you can selectively enable logging only for some components.
 # To enable all selectors use ["*"]. Examples of other selectors are "beat",
