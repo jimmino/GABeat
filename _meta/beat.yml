@@ -7,9 +7,9 @@ gabeat.googleanalytics:
     # https://developers.google.com/analytics/devguides/reporting/realtime/v3/
     # Documentation explaining OAuth2 Service Account flow and how code works
     # https://developers.google.com/accounts/docs/OAuth2ServiceAccount
-    google_credentials_file: /path/to/your/jwt/token/file
+    google_credentials_file: $GOPATH/src/github.com/GeneralElectric/GABeat/key.json
     # replace ga_ids with your metric ID from GA
-    ga_ids: "ga:123456789"
+    ga_ids: "ga:149209755"
     # Docs on available metrics and dimensions can be found here:
     # https://developers.google.com/analytics/devguides/reporting/realtime/dimsmets/
     ga_metrics: "rt:pageviews"

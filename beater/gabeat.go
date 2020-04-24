@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elastic/beats/libbeat/beat"
-	"github.com/elastic/beats/libbeat/common"
 	"github.com/elastic/beats/libbeat/logp"
-
-	//"github.com/elastic/beats/libbeat/publisher"
+	"github.com/elastic/beats/v7/libbeat/beat"
+	"github.com/elastic/beats/v7/libbeat/common"
 
 	"github.com/GeneralElectric/GABeat/config"
 	"github.com/GeneralElectric/GABeat/ga"
@@ -47,6 +45,9 @@ func runFunctionally(bt *Gabeat, b *beat.Beat, dataFunc gaDataRetriever) error {
 	logp.Info("gabeat is running! Hit CTRL-C to stop it.")
 	var err error
 	bt.client, err = b.Publisher.Connect()
+	if err != nil {
+		logp.Error(err)
+	}
 	ticker := time.NewTicker(bt.config.Period)
 	for {
 		select {
@@ -70,18 +71,17 @@ func beatOnce(client beat.Client, beatName string, gaConfig config.GoogleAnalyti
 
 //func makeEvent(beatType string, GAData []ga.GABeatDataPoint) map[string]interface{} {
 func makeEvent(beatType string, GAData []ga.GABeatDataPoint) beat.Event {
-
+	//event := common.MapStr{
 	event := beat.Event{
-		Timestamp: time.Now(), /* Timestamp */
+		//"@timestamp": common.Time(time.Now()),
+		Timestamp: time.Now(),
 		Fields: common.MapStr{
 			"type":  beatType,
-			"count": 1,
+			"count": 1, //The number of transactions that this event represents
 		},
 	}
-
 	for _, gaDataPoint := range GAData {
 		gaDataName := gaDataPoint.DimensionName + "_" + gaDataPoint.MetricName
-		//event.Put(gaDataName, gaDataPoint.Value)
 		event.PutValue(gaDataName, gaDataPoint.Value)
 	}
 	return event
@@ -89,12 +89,12 @@ func makeEvent(beatType string, GAData []ga.GABeatDataPoint) beat.Event {
 
 func publishToElastic(client beat.Client, beatType string, GAData []ga.GABeatDataPoint) {
 	event := makeEvent(beatType, GAData)
-	succeeded := client.Publish(event)
-	logp.Info("Event sent")
 	//succeeded := client.PublishEvent(event)
-	if !succeeded {
+	client.Publish(event)
+	logp.Info("Event sent")
+	/*if !succeeded {
 		logp.Err("Publisher couldn't publish event to Elastic")
-	}
+	}*/
 }
 
 func (bt *Gabeat) Stop() {

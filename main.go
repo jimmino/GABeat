@@ -3,15 +3,14 @@ package main
 import (
 	"os"
 
-	"github.com/elastic/beats/libbeat/beat"
+	"github.com/GeneralElectric/GABeat/cmd"
 	"github.com/elastic/beats/libbeat/logp"
-
-	"github.com/GeneralElectric/GABeat/beater"
 )
 
 func main() {
 	logp.Info("Starting GA Beat...")
-	err := beat.Run("gabeat", "", beater.New)
+	//err := beat.Run("gabeat", "", beater.New)
+	err := cmd.RootCmd.Execute()
 	os.Exit(getExitStatus(err))
 }
 

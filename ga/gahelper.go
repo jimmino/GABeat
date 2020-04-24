@@ -13,9 +13,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 )
 
 var errorResult = GABeatDataPoint{-1, "error", "error"}
@@ -24,8 +24,8 @@ var emptyResult = GABeatDataPoint{0, "empty", "empty"}
 var emptyResults = []GABeatDataPoint{emptyResult}
 var alphanumericPlusUnderscoreRegex, _ = regexp.Compile("[_0-9A-Za-z]")
 var whitespaceRegex, _ = regexp.Compile("[[:space:]]")
-const logSelector = "gahelper"
 
+const logSelector = "gahelper"
 
 type GABeatDataPoint struct {
 	Value         int
@@ -120,18 +120,18 @@ func getGAData(gaIds string, gaMetrics string, gaDimensions string) (gaData *ana
 
 func parseGAResponse(gaData *analytics.RealtimeData) (GAData []GABeatDataPoint, err error) {
 	debugGAResponse(gaData)
-	if(len(gaData.Rows) < 1 || len(gaData.Rows[0]) < 1){
+	if len(gaData.Rows) < 1 || len(gaData.Rows[0]) < 1 {
 		return emptyResults, nil
 	}
 	gaDataPoints := []GABeatDataPoint{}
-  metricNameHeader := getMetric(gaData)
+	metricNameHeader := getMetric(gaData)
 
 	for _, row := range gaData.Rows {
 		//ASSUMPTION: last element in row is the numerical value and all
 		//preceding values are dimension names.
-		var dimensionNames []string = row[0:len(row) - 1]
+		var dimensionNames []string = row[0 : len(row)-1]
 		dimensionName := strings.Join(dimensionNames, "_")
-		var metricValue string = row[len(row) - 1]
+		var metricValue string = row[len(row)-1]
 		dataPoint, err := strconv.Atoi(metricValue)
 		if err != nil {
 			return errorResults, fmt.Errorf("Error converting string to int: %s, %v", metricValue, err)
@@ -160,15 +160,15 @@ func format(toSanitize string) (sanitized string) {
 
 //ASSUMPTION: Last element in header array is the metric name and all
 //preceding elements are dimension names
-func getMetric(gaData *analytics.RealtimeData) (metricName string){
+func getMetric(gaData *analytics.RealtimeData) (metricName string) {
 	lastHeaderIndex := len(gaData.ColumnHeaders) - 1
 	lastHeader := gaData.ColumnHeaders[lastHeaderIndex]
 	logp.Debug(logSelector, "metricName: %s", lastHeader.Name)
 	return lastHeader.Name
 }
 
-func debugGAResponse(gaData *analytics.RealtimeData){
-	if (logp.IsDebug(logSelector)){
+func debugGAResponse(gaData *analytics.RealtimeData) {
+	if logp.IsDebug(logSelector) {
 		for i, columnHeader := range gaData.ColumnHeaders {
 			logp.Debug(logSelector, "column header [%d]: %s %s %s ", i,
 				columnHeader.ColumnType, columnHeader.DataType, columnHeader.Name)
